@@ -76,11 +76,11 @@ RUN yum search voms
 RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
 
 # Install tailwind css
-RUN jupyter labextension install jupyterlab-tailwind-theme
+#RUN jupyter labextension install jupyterlab-tailwind-theme
 
 RUN jupyter lab build
 
-RUN mkdir -p ~/.jupyter/lab/settings && \
-    echo '{"@jupyterlab/apputils-extension:themes": {"theme":"Tailwind Light"}}'> ~/.jupyter/lab/settings/overrides.json
+#RUN mkdir -p ~/.jupyter/lab/settings && \
+#    echo '{"@jupyterlab/apputils-extension:themes": {"theme":"Tailwind Light"}}'> ~/.jupyter/lab/settings/overrides.json
 
 WORKDIR /opt/workspace
