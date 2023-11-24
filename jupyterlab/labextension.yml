@@ -1,0 +1,6 @@
+labextension:
+  factory:
+    module: dask_kubernetes.operator
+    class: KubeCluster
+    args: []
+    kwargs: {}
