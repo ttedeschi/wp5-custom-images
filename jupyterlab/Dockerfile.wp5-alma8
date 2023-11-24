@@ -55,7 +55,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/
 RUN chmod +x /bin/tini
 
 # Install DASK labextension
-RUN pip install dask-labextension 7.0.0
+RUN pip install dask-labextension
 COPY labextension.yml ~/.config/dask/labextension.yml
 
 RUN mkdir -p /root/.ipython
