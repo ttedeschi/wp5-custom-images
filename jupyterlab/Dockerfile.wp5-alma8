@@ -66,8 +66,6 @@ COPY ./spawn.sh /root/.init/spawn.sh
 RUN chmod +x /usr/local/bin/jupyterhub-singleuser.sh
 RUN chmod +x /usr/local/bin/jupyterhub-singleuser && chmod +x /root/.init/spawn.sh
 
-COPY ./ca.crt /ca.crt
-
 WORKDIR /etc/yum.repos.d/
 RUN wget http://repository.egi.eu/sw/production/cas/1/current/repo-files/egi-trustanchors.repo
 RUN wget http://linuxsoft.cern.ch/wlcg/wlcg-centos8.repo
