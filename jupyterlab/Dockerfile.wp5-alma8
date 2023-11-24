@@ -15,9 +15,9 @@ RUN ln -s `which python3.9` /usr/local/bin/python3
 
 RUN python3.9 -m pip install -U pip setuptools wheel
 
-RUN curl -fsSL https://rpm.nodesource.com/setup_16.x | bash -
+RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
 
-RUN yum install https://rpm.nodesource.com/pub_16.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y \
+RUN yum install https://rpm.nodesource.com/pub_18.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y \
    && yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1 
 RUN yum install -y  nodejs npm && npm install -g typescript yarn
 
