@@ -30,7 +30,7 @@ RUN python3.9 -m pip install --no-cache-dir \
     ipympl \
     ipywidgets \
     jedi-language-server \
-    jupyterlab-system-monitor \
+    jupyter-resource-usage \
     jupyterlab==4.0.8 \
     jupyterhub==3.1.1 \
     ipykernel \
