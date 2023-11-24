@@ -1,0 +1,88 @@
+ARG BASE_IMAGE="cern/alma8-base"
+FROM ${BASE_IMAGE}
+
+COPY packages /tmp/
+
+RUN yum -y clean metadata \
+    && yum install -y dnf-plugins-core \
+    && yum -y install epel-release python39 python39-pip python39-devel boost-python3 jq \
+    && xargs yum -y install < /tmp/packages \
+    && yum -y clean all 
+    #&& rm -f /tmp/packages \
+    #&& yum clean all
+
+RUN ln -s `which python3.9` /usr/local/bin/python3
+
+RUN python3.9 -m pip install -U pip setuptools wheel
+
+RUN curl -fsSL https://rpm.nodesource.com/setup_16.x | bash -
+
+RUN yum install https://rpm.nodesource.com/pub_16.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y \
+   && yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1 
+RUN yum install -y  nodejs npm && npm install -g typescript yarn
+
+WORKDIR /
+
+# Install jupyterlab
+RUN python3.9 -m pip install --no-cache-dir \
+    idna \
+    importlib-metadata \
+    ipympl \
+    ipywidgets \
+    jedi-language-server \
+    jupyterlab-system-monitor \
+    jupyterlab==4.0.8 \
+    jupyterhub==3.1.1 \
+    ipykernel \
+    nbdime \
+    notebook \
+    pycurl \
+    dask[complete]==2023.7.1 \
+    dask[dataframe]==2023.7.1 \
+    bokeh \
+    click \
+    dask-jobqueue \
+    ipython \
+    ipywidgets \
+    jupyter-server-proxy \
+    numpy \
+    pandas \
+    toolz
+
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
+RUN chmod +x /bin/tini
+
+# Install DASK labextension
+RUN pip install dask-labextension 7.0.0
+COPY labextension.yml ~/.config/dask/labextension.yml
+
+RUN mkdir -p /root/.ipython
+
+COPY ./jupyterhub-singleuser-cc7.sh /usr/local/bin/jupyterhub-singleuser.sh
+COPY ./jupyterhub-singleuser-cc7 /usr/local/bin/jupyterhub-singleuser
+COPY ./spawn.sh /root/.init/spawn.sh
+RUN chmod +x /usr/local/bin/jupyterhub-singleuser.sh
+RUN chmod +x /usr/local/bin/jupyterhub-singleuser && chmod +x /root/.init/spawn.sh
+
+COPY ./ca.crt /ca.crt
+
+WORKDIR /etc/yum.repos.d/
+RUN wget http://repository.egi.eu/sw/production/cas/1/current/repo-files/egi-trustanchors.repo
+RUN wget http://linuxsoft.cern.ch/wlcg/wlcg-centos8.repo
+WORKDIR /etc/pki/rpm-gpg
+RUN wget http://linuxsoft.cern.ch/wlcg/RPM-GPG-KEY-wlcg
+
+RUN yum search voms
+RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
+
+# Install tailwind css
+RUN jupyter labextension install jupyterlab-tailwind-theme
+
+RUN jupyter lab build
+
+RUN mkdir -p ~/.jupyter/lab/settings && \
+    echo '{"@jupyterlab/apputils-extension:themes": {"theme":"Tailwind Light"}}'> ~/.jupyter/lab/settings/overrides.json
+
+WORKDIR /opt/workspace
