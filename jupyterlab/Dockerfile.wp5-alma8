@@ -56,7 +56,8 @@ RUN chmod +x /bin/tini
 
 # Install DASK labextension
 RUN pip install dask-labextension
-COPY labextension.yml ~/.config/dask/labextension.yml
+#COPY labextension.yml ~/.config/dask/labextension.yml
+COPY dask.yaml /usr/local/lib/python3.9/site-packages/dask/dask.yaml
 
 RUN mkdir -p /root/.ipython
 
@@ -82,5 +83,7 @@ RUN jupyter lab build
 
 #RUN mkdir -p ~/.jupyter/lab/settings && \
 #    echo '{"@jupyterlab/apputils-extension:themes": {"theme":"Tailwind Light"}}'> ~/.jupyter/lab/settings/overrides.json
+
+RUN pip install dask-kubernetes
 
 WORKDIR /opt/workspace
