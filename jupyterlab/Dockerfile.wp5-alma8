@@ -49,15 +49,15 @@ RUN python3.9 -m pip install --no-cache-dir \
     pandas \
     toolz
 
+RUN python3.9 -m pip install dask-kubernetes
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
 RUN chmod +x /bin/tini
 
 # Install DASK labextension
-RUN pip install dask-labextension
-#COPY labextension.yml ~/.config/dask/labextension.yml
-COPY dask.yaml /usr/local/lib/python3.9/site-packages/dask/dask.yaml
+RUN python3.9 -m pip install dask-labextension
+COPY labextension.yaml /usr/local/lib/python3.9/site-packages/dask_labextension/labextension.yaml
 
 RUN mkdir -p /root/.ipython
 
@@ -76,14 +76,6 @@ RUN wget http://linuxsoft.cern.ch/wlcg/RPM-GPG-KEY-wlcg
 RUN yum search voms
 RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
 
-# Install tailwind css
-#RUN jupyter labextension install jupyterlab-tailwind-theme
-
 RUN jupyter lab build
-
-#RUN mkdir -p ~/.jupyter/lab/settings && \
-#    echo '{"@jupyterlab/apputils-extension:themes": {"theme":"Tailwind Light"}}'> ~/.jupyter/lab/settings/overrides.json
-
-RUN pip install dask-kubernetes
 
 WORKDIR /opt/workspace
