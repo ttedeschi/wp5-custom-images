@@ -82,4 +82,6 @@ COPY jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py
 COPY jupyter_server_config.py /root/.jupyter/jupyter_server_config.py
 COPY jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
 
+RUN sed -i 's/kwargs.pop("host_allowlist", \["localhost", "127.0.0.1"\])/lambda app, host: True/' /usr/local/lib/python3.9/site-packages/jupyter_server_proxy/handlers.py
+
 WORKDIR /opt/workspace
