@@ -79,5 +79,6 @@ RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
 RUN jupyter lab build
 
 COPY jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py
+COPY jupyter_server_config.py /root/.jupyter/jupyter_server_config.py
 
 WORKDIR /opt/workspace
