@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/usr/bin/tini -s /usr/local/bin/python3 -- /usr/local/bin/jupyterhub-singleuser "$@" --debug
+/usr/bin/tini -s /usr/local/bin/python3 -- /usr/local/bin/jupyterhub-singleuser "$@" --debug --show-config
