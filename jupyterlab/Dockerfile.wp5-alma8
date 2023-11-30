@@ -2,7 +2,6 @@ ARG BASE_IMAGE="cern/alma8-base"
 FROM ${BASE_IMAGE}
 
 COPY packages /tmp/
-
 RUN yum -y clean metadata \
     && yum install -y dnf-plugins-core \
     && yum -y install epel-release python39 python39-pip python39-devel boost-python3 jq \
@@ -11,65 +10,30 @@ RUN yum -y clean metadata \
     #&& rm -f /tmp/packages \
     #&& yum clean all
 
-RUN ln -s `which python3.9` /usr/local/bin/python3
-
-RUN python3.9 -m pip install -U pip setuptools wheel
-
-RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
-
-RUN yum install https://rpm.nodesource.com/pub_18.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y \
-   && yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
-RUN yum install -y  nodejs npm && npm install -g typescript yarn
-
 WORKDIR /
 
-# Install jupyterlab
-RUN python3.9 -m pip install --no-cache-dir \
-    idna \
-    importlib-metadata \
-    ipympl \
-    ipywidgets \
-    jedi-language-server \
-    jupyter-resource-usage \
-    jupyterlab==4.0.8 \
-    jupyterhub==3.1.1 \
-    ipykernel \
-    nbdime \
-    notebook \
-    pycurl \
-    dask[complete]==2023.7.1 \
-    dask[dataframe]==2023.7.1 \
-    bokeh \
-    click \
-    dask-jobqueue \
-    ipython \
-    ipywidgets \
-    jupyter-server-proxy \
-    numpy \
-    pandas \
-    toolz
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda
+# Put conda in path so we can use conda activate
+ENV PATH=$CONDA_DIR/bin:$PATH
 
-RUN python3.9 -m pip install dask-kubernetes
+RUN conda install jupyterlab -y
+RUN conda install -c conda-forge nodejs -y
+RUN conda install dask -y
+RUN conda install -c conda-forge dask-labextension -y
+RUN conda install dask-kubernetes
+RUN conda install jupyterhub -y
+
+COPY labextension.yaml /usr/local/lib/python3.9/site-packages/dask_labextension/labextension.yaml
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
 RUN chmod +x /bin/tini
 
-# Install miniconda
-#ENV CONDA_DIR /opt/conda
-#RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-#    /bin/bash ~/miniconda.sh -b -p /opt/conda
-
-# Put conda in path so we can use conda activate
-#ENV PATH=$CONDA_DIR/bin:$PATH
-
-# Install DASK labextension
-#RUN conda install -c conda-forge dask-labextension -y
-RUN python3.9 -m pip install jupyter_bokeh
-RUN python3.9 -m pip install dask-labextension
-COPY labextension.yaml /usr/local/lib/python3.9/site-packages/dask_labextension/labextension.yaml
-
 RUN mkdir -p /root/.ipython
+
+RUN echo "ciao"
 
 COPY ./jupyterhub-singleuser.sh /usr/local/bin/jupyterhub-singleuser.sh
 COPY ./jupyterhub-singleuser /usr/local/bin/jupyterhub-singleuser
@@ -86,12 +50,8 @@ RUN wget http://linuxsoft.cern.ch/wlcg/RPM-GPG-KEY-wlcg
 RUN yum search voms
 RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
 
-RUN jupyter lab build
+#RUN jupyter lab build
 
-COPY jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py
-COPY jupyter_server_config.py /root/.jupyter/jupyter_server_config.py
-COPY jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
-
-RUN sed -i 's/kwargs.pop("host_allowlist", \["localhost", "127.0.0.1"\])/lambda app, host: True/' /usr/local/lib/python3.9/site-packages/jupyter_server_proxy/handlers.py
+RUN sed -i 's/kwargs.pop("host_allowlist", \["localhost", "127.0.0.1"\])/lambda app, host: True/' /opt/conda/lib/python3.11/site-packages/jupyter_server_proxy/handlers.py
 
 WORKDIR /opt/workspace
