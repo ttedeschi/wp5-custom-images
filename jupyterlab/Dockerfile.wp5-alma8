@@ -20,11 +20,13 @@ ENV PATH=$CONDA_DIR/bin:$PATH
 
 RUN conda install jupyterlab -y
 RUN conda install -c conda-forge nodejs -y
+RUN conda install jupyterhub -y
 RUN conda install dask -y
+RUN conda install bokeh -y
 RUN conda install -c conda-forge dask-labextension -y
 RUN conda install dask-kubernetes
-RUN conda install jupyterhub -y
-RUN conda install bokeh -y
+
+
 
 COPY labextension.yaml /opt/conda/lib/python3.11/site-packages/dask_labextension/labextension.yaml
 
