@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="cern/alma8-base"
+ARG BASE_IMAGE="cern/alma8-base:latest@sha256:f6e9c613a6e25f8dedb69141222a3c04f977497187bfceb87e7787ce54d27a28"
 FROM ${BASE_IMAGE}
 
 COPY packages /tmp/
@@ -18,14 +18,15 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 # Put conda in path so we can use conda activate
 ENV PATH=$CONDA_DIR/bin:$PATH
 
-RUN conda install jupyterlab -y
-RUN conda install -c conda-forge nodejs -y
-RUN conda install jupyterhub -y
+RUN conda install jupyterlab==4.0.9 -y
+RUN conda install -c conda-forge nodejs==20.9.0 -y
+RUN conda install jupyterhub==4.0.2 -y
 RUN conda install dask==2023.11.0 -y
-RUN conda install bokeh -y
-RUN conda install -c conda-forge jupyter_bokeh -y
-RUN conda install -c conda-forge dask-labextension -y
-RUN conda install dask-kubernetes
+RUN conda install bokeh==3.3.0 -y
+RUN conda install -c conda-forge jupyter_bokeh==2.0.4 -y
+RUN conda install -c conda-forge dask-labextension==7.0.0 -y
+RUN conda install dask-kubernetes==2023.9.0 -y
+RUN conda install kr8s==0.8.16 -y
 
 COPY labextension.yaml /opt/conda/lib/python3.11/site-packages/dask_labextension/labextension.yaml
 
@@ -51,15 +52,6 @@ RUN wget http://linuxsoft.cern.ch/wlcg/RPM-GPG-KEY-wlcg
 
 RUN yum search voms
 RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
-
-#RUN jupyter lab build
-
-WORKDIR /opt/conda/share/jupyterhub/static/js/
-RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-3.0.0.min.js -o bokeh.min.js
-RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.0.0.min.js -o bokeh-widgets.min.js
-RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.0.0.min.js -o bokeh-tables.min.js
-RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.0.0.min.js -o bokeh-api.min.js
-RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-3.0.0.min.js -o bokeh-mathjax.min.js
 
 RUN sed -i 's/kwargs.pop("host_allowlist", \["localhost", "127.0.0.1"\])/lambda app, host: True/' /opt/conda/lib/python3.11/site-packages/jupyter_server_proxy/handlers.py
 
