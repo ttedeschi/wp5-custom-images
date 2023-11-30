@@ -23,6 +23,7 @@ RUN conda install -c conda-forge nodejs -y
 RUN conda install jupyterhub -y
 RUN conda install dask -y
 RUN conda install bokeh -y
+RUN conda install -c conda-forge jupyter_bokeh -y
 RUN conda install -c conda-forge dask-labextension -y
 RUN conda install dask-kubernetes
 
