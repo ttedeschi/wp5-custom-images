@@ -24,8 +24,9 @@ RUN conda install dask -y
 RUN conda install -c conda-forge dask-labextension -y
 RUN conda install dask-kubernetes
 RUN conda install jupyterhub -y
+RUN conda install bokeh -y
 
-COPY labextension.yaml /usr/local/lib/python3.9/site-packages/dask_labextension/labextension.yaml
+COPY labextension.yaml /opt/conda/lib/python3.11/site-packages/dask_labextension/labextension.yaml
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
