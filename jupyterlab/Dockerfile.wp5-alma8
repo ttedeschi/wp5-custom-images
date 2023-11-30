@@ -56,6 +56,13 @@ RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
 
 #RUN jupyter lab build
 
+WORKDIR /opt/conda/share/jupyterhub/static/js/
+RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-3.0.0.min.js -o bokeh.min.js
+RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.0.0.min.js -o bokeh-widgets.min.js
+RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.0.0.min.js -o bokeh-tables.min.js
+RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.0.0.min.js -o bokeh-api.min.js
+RUN wget https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-3.0.0.min.js -o bokeh-mathjax.min.js
+
 RUN sed -i 's/kwargs.pop("host_allowlist", \["localhost", "127.0.0.1"\])/lambda app, host: True/' /opt/conda/lib/python3.11/site-packages/jupyter_server_proxy/handlers.py
 
 WORKDIR /opt/workspace
