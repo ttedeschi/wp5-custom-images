@@ -2,7 +2,7 @@ labextension:
   factory:
     module: dask_kubernetes.operator
     class: KubeCluster
-    args: []
+    args: [resources={"requests": {"memory": "2Gi", cpu: "1"}, "limits": {"memory": "2Gi", cpu: "1"}}]
     kwargs: {}
   default:
     workers: null
