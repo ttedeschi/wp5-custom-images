@@ -29,6 +29,7 @@ RUN conda install -c conda-forge dask-kubernetes==2023.9.0 -y
 RUN conda install -c conda-forge kr8s==0.8.16 -y
 
 COPY labextension.yaml /opt/conda/lib/python3.11/site-packages/dask_labextension/labextension.yaml
+COPY kubernetes.yaml /root/.config/dask/kubernetes.yaml
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
