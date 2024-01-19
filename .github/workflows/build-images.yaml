@@ -37,7 +37,7 @@ jobs:
           file: ./jupyterlab/Dockerfile.wp5-alma8
           platforms: linux/amd64
           build-args: "NOTEBOOK_VERSION=${{ env.RELEASE_VERSION }}"
-jupyterlab-image-wp5-alma9:
+  jupyterlab-image-wp5-alma9:
     runs-on: ubuntu-latest
     #env:
     #  DOCKER_TARGET_PLATFORM: linux/arm64
