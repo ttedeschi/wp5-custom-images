@@ -11,6 +11,7 @@ labextension:
         limits:
           memory: "2Gi"
           cpu: "1"
+      image: "ghcr.io/ttedeschi/jlab:wp5-alma8-0.0.40"
   default:
     workers: null
     adapt:
