@@ -1,0 +1,81 @@
+FROM gitlab-registry.cern.ch/linuxsupport/alma9-base
+
+LABEL maintainer.name="ROOT team"
+LABEL maintainer.email="root-dev@cern.ch"
+
+ENV LANG=C.UTF-8
+
+ARG ROOT_BIN=root_v6.30.02.Linux-almalinux9.3-x86_64-gcc11.4.tar.gz
+
+WORKDIR /opt
+
+COPY packages packages
+
+RUN dnf update -q -y \
+ && dnf install -y epel-release \
+ && dnf install -y $(cat packages)\
+ && rm -f packages \
+ && curl -O https://root.cern/download/${ROOT_BIN} \
+ && tar -xzvf ${ROOT_BIN} \
+ && rm -f ${ROOT_BIN} \
+ && echo /opt/root/lib >> /etc/ld.so.conf \
+ && ldconfig
+
+ENV ROOTSYS /opt/root
+ENV PATH $ROOTSYS/bin:$PATH
+ENV PYTHONPATH $ROOTSYS/lib:$PYTHONPATH
+ENV CLING_STANDARD_PCH none
+
+COPY packages /tmp/
+RUN yum -y clean metadata \
+    && yum install -y dnf-plugins-core \
+    && yum -y install epel-release python39 python39-pip python39-devel boost-python3 jq \
+    && xargs yum -y install < /tmp/packages \
+    && yum -y clean all
+    #&& rm -f /tmp/packages \
+    #&& yum clean all
+
+WORKDIR /
+
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda
+# Put conda in path so we can use conda activate
+ENV PATH=$CONDA_DIR/bin:$PATH
+
+RUN conda install -c conda-forge jupyterlab==4.0.9 -y
+RUN conda install -c conda-forge nodejs==20.9.0 -y
+RUN conda install -c conda-forge jupyterhub==4.0.2 -y
+RUN conda install -c conda-forge dask==2023.11.0 -y
+RUN conda install -c conda-forge bokeh==3.3.0 -y
+RUN conda install -c conda-forge jupyter_bokeh==2.0.4 -y
+RUN conda install -c conda-forge dask-labextension==7.0.0 -y
+RUN conda install -c conda-forge dask-kubernetes==2023.9.0 -y
+RUN conda install -c conda-forge kr8s==0.8.16 -y
+
+COPY labextension.yaml /opt/conda/lib/python3.11/site-packages/dask_labextension/labextension.yaml
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
+RUN chmod +x /bin/tini
+
+RUN mkdir -p /root/.ipython
+
+COPY ./jupyterhub-singleuser.sh /usr/local/bin/jupyterhub-singleuser.sh
+COPY ./jupyterhub-singleuser /usr/local/bin/jupyterhub-singleuser
+COPY ./spawn.sh /root/.init/spawn.sh
+RUN chmod +x /usr/local/bin/jupyterhub-singleuser.sh
+RUN chmod +x /usr/local/bin/jupyterhub-singleuser && chmod +x /root/.init/spawn.sh
+
+WORKDIR /etc/yum.repos.d/
+RUN wget http://repository.egi.eu/sw/production/cas/1/current/repo-files/egi-trustanchors.repo
+RUN wget http://linuxsoft.cern.ch/wlcg/wlcg-centos8.repo
+WORKDIR /etc/pki/rpm-gpg
+RUN wget http://linuxsoft.cern.ch/wlcg/RPM-GPG-KEY-wlcg
+
+RUN yum search voms
+RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
+
+RUN sed -i 's/kwargs.pop("host_allowlist", \["localhost", "127.0.0.1"\])/lambda app, host: True/' /opt/conda/lib/python3.11/site-packages/jupyter_server_proxy/handlers.py
+
+WORKDIR /opt/workspace
