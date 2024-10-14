@@ -12,6 +12,7 @@ labextension:
           memory: "2Gi"
           cpu: "1"
       image: "ghcr.io/ttedeschi/jlab:wp5-alma8-0.0.40"
+      idle_timeout: 21600
   default:
     workers: null
     adapt:
