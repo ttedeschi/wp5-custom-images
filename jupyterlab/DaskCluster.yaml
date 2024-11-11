@@ -27,7 +27,7 @@ spec:
         - --host
         - 0.0.0.0
         env: []
-        image: ghcr.io/ttedeschi/jlab:wp5-fastcv-alma9-0.0.43
+        image: ghcr.io/ttedeschi/jlab:wp5-alma9-0.0.43-fastcv
         livenessProbe:
           httpGet:
             path: /health
@@ -77,7 +77,7 @@ spec:
         - --dashboard-address
         - "8788"
         env: []
-        image: ghcr.io/ttedeschi/jlab:wp5-fastcv-alma9-0.0.43
+        image: ghcr.io/ttedeschi/jlab:wp5-alma9-0.0.43-fastcv
         name: worker
         ports:
         - containerPort: 8788
