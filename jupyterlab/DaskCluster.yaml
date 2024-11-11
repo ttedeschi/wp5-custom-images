@@ -1,0 +1,102 @@
+apiVersion: kubernetes.dask.org/v1
+kind: DaskCluster
+metadata:
+  name: dask
+  namespace: jhub
+spec:
+  idleTimeout: 3600
+  scheduler:
+    service:
+      ports:
+      - name: tcp-comm
+        port: 8786
+        protocol: TCP
+        targetPort: tcp-comm
+      - name: http-dashboard
+        port: 8787
+        protocol: TCP
+        targetPort: http-dashboard
+      selector:
+        dask.org/cluster-name: dask
+        dask.org/component: scheduler
+      type: ClusterIP
+    spec:
+      containers:
+      - args:
+        - dask-scheduler
+        - --host
+        - 0.0.0.0
+        env: []
+        image: ghcr.io/ttedeschi/jlab:wp5-alma8-0.0.40
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http-dashboard
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: scheduler
+        ports:
+        - containerPort: 8786
+          name: tcp-comm
+          protocol: TCP
+        - containerPort: 8787
+          name: http-dashboard
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http-dashboard
+          initialDelaySeconds: 0
+          periodSeconds: 1
+          timeoutSeconds: 300
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        volumeMounts:
+        - name: nfs
+          mountPath: /opt/workspace/nfs
+      volumes:
+      - name: nfs
+        hostPath:
+          path: /home/ubuntu/nfs
+          type: Directory
+            
+  worker:
+    replicas: 0
+    spec:
+      containers:
+      - args:
+        - dask-worker
+        - --name
+        - $(DASK_WORKER_NAME)
+        - --dashboard
+        - --dashboard-address
+        - "8788"
+        env: []
+        image: ghcr.io/ttedeschi/jlab:wp5-alma8-0.0.40
+        name: worker
+        ports:
+        - containerPort: 8788
+          name: http-dashboard
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        volumeMounts:
+        - name: nfs
+          mountPath: /opt/workspace/nfs
+      volumes:
+      - name: nfs
+        hostPath:
+          path: /home/ubuntu/nfs
+          type: Directory
+
+
