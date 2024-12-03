@@ -4,15 +4,7 @@ labextension:
     class: KubeCluster
     args: []
     kwargs: 
-      resources:
-        requests:
-          memory: "2Gi"
-          cpu: "1"
-        limits:
-          memory: "2Gi"
-          cpu: "1"
-      image: "ghcr.io/ttedeschi/jlab:wp5-alma8-0.0.40"
-      idle_timeout: 21600
+      custom_cluster_spec: "/opt/conda/lib/python3.11/site-packages/dask_labextension/DaskCluster.yaml"      
   default:
     workers: null
     adapt:

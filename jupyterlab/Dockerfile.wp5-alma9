@@ -1,10 +1,13 @@
-FROM rootproject/root:6.30.02-alma9
+#ARG BASE_IMAGE="cern/alma9-base:20240901-1.x86_64"
+#ARG BASE_IMAGE="cern/alma9-base:latest@sha256:3a2ec5e0b8a68d3576c54b4c973430b68a05259a4feb1bbcd1b3d6718333c185"
+ARG BASE_IMAGE="cern/alma9-base:latest"
+FROM ${BASE_IMAGE}
 
-COPY packages /tmp/
+COPY packages-alma9 /tmp/
 RUN yum -y clean metadata \
     && yum install -y dnf-plugins-core \
-    && yum -y install epel-release python39 python39-pip python39-devel boost-python3 jq \
-    && xargs yum -y install < /tmp/packages \
+    && yum -y install epel-release boost-python3 jq \
+    && xargs yum -y install < /tmp/packages-alma9 \
     && yum -y clean all
     #&& rm -f /tmp/packages \
     #&& yum clean all
@@ -17,32 +20,46 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 # Put conda in path so we can use conda activate
 ENV PATH=$CONDA_DIR/bin:$PATH
 
-RUN conda install -c conda-forge jupyterlab==4.0.9 -y
-RUN conda install -c conda-forge nodejs==20.9.0 -y
-RUN conda install -c conda-forge jupyterhub==4.0.2 -y
-RUN conda install -c conda-forge dask==2023.11.0 -y
-RUN conda install -c conda-forge bokeh==3.3.0 -y
-RUN conda install -c conda-forge jupyter_bokeh==2.0.4 -y
-RUN conda install -c conda-forge dask-labextension==7.0.0 -y
-RUN conda install -c conda-forge dask-kubernetes==2023.9.0 -y
-RUN conda install -c conda-forge kr8s==0.8.16 -y
+#RUN conda install conda-forge::conda-libmamba-solver conda-forge::libmamba conda-forge::libmambapy conda-forge::libarchive
+RUN conda install -c conda-forge -y python=3.11.8 \
+                                    jupyterlab==4.0.9 \
+                                    nodejs==20.9.0 \
+                                    jupyterhub==4.0.2 \
+                                    dask==2023.11.0 \
+                                    bokeh==3.3.0 \
+                                    jupyter_bokeh==2.0.4 \
+                                    dask-labextension==7.0.0 \
+                                    dask-kubernetes==2023.9.0 \
+                                    kr8s==0.8.16 \
+                                    root \
+                                    coffea=0.7.22 \
+                                    fsspec-xrootd
+
+#RUN conda config --set channel_priority strict
+#RUN conda install -c conda-forge root
 
 COPY labextension.yaml /opt/conda/lib/python3.11/site-packages/dask_labextension/labextension.yaml
+COPY DaskCluster.yaml /opt/conda/lib/python3.11/site-packages/dask_labextension/DaskCluster.yaml
+COPY refresh-manifest.py /opt/conda/lib/python3.11/site-packages/dask_labextension/refresh-manifest.py
 
+RUN sleep 0.1
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /bin/tini
 RUN chmod +x /bin/tini
 
 RUN mkdir -p /root/.ipython
 
-COPY ./jupyterhub-singleuser.sh /usr/local/bin/jupyterhub-singleuser.sh
-COPY ./jupyterhub-singleuser /usr/local/bin/jupyterhub-singleuser
+COPY ./jupyterhub-singleuser-alma9.sh /usr/local/bin/jupyterhub-singleuser.sh
+COPY ./jupyterhub-singleuser-alma9 /usr/local/bin/jupyterhub-singleuser
 COPY ./spawn.sh /root/.init/spawn.sh
 RUN chmod +x /usr/local/bin/jupyterhub-singleuser.sh
 RUN chmod +x /usr/local/bin/jupyterhub-singleuser && chmod +x /root/.init/spawn.sh
 
+RUN mkdir -p /root/.ipython
+
+
 WORKDIR /etc/yum.repos.d/
-RUN wget http://repository.egi.eu/sw/production/cas/1/current/repo-files/egi-trustanchors.repo
+RUN wget https://repository.egi.eu/sw/production/cas/1/current/repo-files/egi-trustanchors.repo
 RUN wget http://linuxsoft.cern.ch/wlcg/wlcg-centos8.repo
 WORKDIR /etc/pki/rpm-gpg
 RUN wget http://linuxsoft.cern.ch/wlcg/RPM-GPG-KEY-wlcg
@@ -50,6 +67,34 @@ RUN wget http://linuxsoft.cern.ch/wlcg/RPM-GPG-KEY-wlcg
 RUN yum search voms
 RUN yum install -y  apptainer voms-clients-cpp ca-policy-lcg
 
+
+RUN mkdir -p /.init \
+    && wget https://github.com/DODAS-TS/sts-wire/releases/download/v2.0.0/sts-wire_linux -O /.init/sts-wire \
+    && chmod +x /.init/sts-wire
+
+# Install tailwind css
+#RUN jupyter labextension install jupyterlab-tailwind-theme
+
+#RUN mkdir -p ~/.jupyter/lab/settings && \
+#    echo '{"@jupyterlab/apputils-extension:themes": {"theme":"Tailwind Light"}}'> ~/.jupyter/lab/settings/overrides.json
+
+#RUN yum install -y https://research.cs.wisc.edu/htcondor/repo/9.0/htcondor-release-current.el9.noarch.rpm
+RUN yum install -y https://research.cs.wisc.edu/htcondor/repo/10.x/htcondor-release-current.el9.noarch.rpm
+
+RUN sed -i 's/current/8.9/g' /etc/yum.repos.d/htcondor.repo
+
+RUN yum install -y condor
+
+RUN pip install setuptools==59.5.0
+#RUN pip install --upgrade pysqlite
+
+#RUN jupyter lab build
+
 RUN sed -i 's/kwargs.pop("host_allowlist", \["localhost", "127.0.0.1"\])/lambda app, host: True/' /opt/conda/lib/python3.11/site-packages/jupyter_server_proxy/handlers.py
 
 WORKDIR /opt/workspace
+
+ARG NOTEBOOK_VERSION
+ENV IMAGE_TAG=$NOTEBOOK_VERSION 
+
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "base"]
