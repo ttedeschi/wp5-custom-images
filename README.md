@@ -1,1 +1,1 @@
-# custom-images
+# wp5-custom-images
